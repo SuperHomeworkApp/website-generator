@@ -3,7 +3,7 @@ import Plot
 import Files
 
 struct Page {
-    enum PageType { case normal, root, notFound }
+    enum PageType { case normal, root, redirect(link: String), notFound }
     let type: PageType
     let title: String
     let link: String
@@ -19,28 +19,48 @@ struct Page {
 
 extension Page {
     func html() -> HTML {
-        HTML(
-            .head(
-                .title("\(self.title) — SuperHomework"),
-                .stylesheet("https://fonts.googleapis.com/css?family=Philosopher:700&display=swap"),
-                .style(Style.global.cssString),
-                .viewport(.accordingToDevice)
-            ),
-            .body(
-                .forEach(self.body, { $0 }),
-                .siteFooter(),
-                .style(.page)
+        switch self.type {
+        case .normal, .root, .notFound:
+            return HTML(
+                .head(
+                    .title("\(self.title) — SuperHomework"),
+                    .stylesheet("https://fonts.googleapis.com/css?family=Philosopher:700&display=swap"),
+                    .style(Style.global.cssString),
+                    .viewport(.accordingToDevice)
+                ),
+                .body(
+                    .forEach(self.body, { $0 }),
+                    .siteFooter(),
+                    .style(.page)
+                )
             )
-        )
+        case .redirect(let link):
+            return HTML(
+                .head(
+                    .title("\(self.title) — SuperHomework"),
+                    .meta(.attribute(named: "http-equiv", value: "refresh"), .content("0; url=\(link)"))
+                ),
+                .body(
+                    .text("Redirecting to "),
+                    .a(.href(link), .text(link))
+                )
+            )
+        }
     }
 
     func indexHTMLFile() throws -> File {
         var folder = buildFolderRoot
-        if self.type == .normal { folder = try folder.createSubfolderIfNeeded(withName: self.link) }
-
-        if self.type == .notFound {
+        switch self.type {
+        case .normal, .redirect(_):
+            folder = try folder.createSubfolderIfNeeded(withName: self.link)
+        default:
+            break
+        }
+        
+        switch self.type {
+        case .notFound:
             return try folder.createFile(named: "404.html")
-        } else {
+        default:
             return try folder.createFile(named: "index.html")
         }
     }

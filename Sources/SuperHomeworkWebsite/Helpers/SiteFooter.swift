@@ -20,7 +20,7 @@ extension Node where Context: HTML.BodyContext {
             ),
             .p(
                 .a("Twitter", .href("https://twitter.com/superhomework"), .style(.link)),
-                .a("Instagram", .href("/TODO"), .style(.link)),
+//                .a("Instagram", .href("/TODO"), .style(.link)),
                 .style(.socialLinksContainer)
             ),
             .style(.footer)
